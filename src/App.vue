@@ -1,5 +1,5 @@
 <script setup>
-  import { reactive, onMounted } from 'vue';
+  import { reactive, onMounted, ref } from 'vue';
   const estado = reactive({
     filtro: 'todos',
     tarefaTemp: '',
@@ -81,9 +81,17 @@
     document.documentElement.setAttribute('data-theme', tema)
   }
 
+  const tarefaInput = ref(null)
+  const listaRef = ref(null)
+
   onMounted(() => {
     const temaSalvo = (() => { try { return localStorage.getItem('todo-tema') } catch(e){ return null } })()
     aplicarTema(temaSalvo || estado.tema)
+    // focar no input de nova tarefa e rolar para a lista
+    setTimeout(() => {
+      tarefaInput.value?.focus()
+      listaRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
   })
 </script>
 
@@ -100,7 +108,8 @@
             <button class="btn btn-light btn-sm me-2" @click="marcarTodas">Marcar/Desmarcar tudo</button>
             <button class="btn btn-outline-light btn-sm" @click="limparFinalizadas">Limpar finalizadas</button>
           </div>
-          <div>
+          <div class="d-flex align-items-center">
+            <button class="btn btn-sm btn-outline-light me-2" @click.prevent="listaRef.scrollIntoView({ behavior: 'smooth' })">Entrar na lista</button>
             <select class="form-select form-select-sm" :value="estado.tema" @change="evento => aplicarTema(evento.target.value)" style="width:150px">
               <option value="coral">Tema: Coral</option>
               <option value="teal">Tema: Teal</option>
@@ -117,10 +126,11 @@
       </div>
     </header>
     <form @submit.prevent="cadastraTarefa">
-      <div class="input-group mb-3">
+        <div class="input-group mb-3">
         <input
           class="form-control"
           v-model="estado.tarefaTemp"
+          ref="tarefaInput"
           required
           type="text"
           placeholder="Adicionar nova tarefa e pressione Enter"
@@ -134,7 +144,7 @@
       </div>
     </form>
     
-    <div class="card">
+    <div class="card" ref="listaRef">
       <div class="card-body">
         <ul class="list-group">
           <li class="list-group-item d-flex align-items-center" v-for="tarefa in getTarefasFiltradas()" :key="tarefa.titulo">
